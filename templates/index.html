@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseTrack Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Open+Sans:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-view" class="view hidden">
+            <div class="login-container">
+                <i data-lucide="wallet" class="login-icon"></i>
+                <h2>Welcome Back</h2>
+                <p style="color:var(--text-secondary); margin-bottom: 1.5rem;">Enter your PIN to access ExpenseTrack Pro
+                </p>
+                <form id="login-form">
+                    <input type="password" id="pin-input" maxlength="4" required>
+                    <div id="login-error" class="error-msg hidden"></div>
+                    <button type="submit" class="btn btn-primary" style="width:100%">UNLOCK DASHBOARD</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- App Shell -->
+        <div id="main-view" class="view hidden">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <i data-lucide="wallet" style="color:var(--primary-color); width:28px; height:28px;"></i>
+                    <span class="app-title">ExpenseTrack Pro</span>
+                </div>
+                <nav>
+                    <button class="nav-item active" data-target="dashboard">
+                        <i data-lucide="layout-grid"></i> Dashboard
+                    </button>
+                    <button class="nav-item" data-target="transactions">
+                        <i data-lucide="arrow-left-right"></i> Transactions
+                    </button>
+                    <button class="nav-item" data-target="manage">
+                        <i data-lucide="settings-2"></i> Manage & Settings
+                    </button>
+                </nav>
+            </aside>
+
+            <!-- Main Content Area -->
+            <main class="content">
+                <header class="top-header">
+                    <h2 id="page-title">Dashboard</h2>
+                    <button id="add-transaction-btn-desktop" class="btn btn-primary desktop-only">
+                        <i data-lucide="plus-circle"></i> Add New
+                    </button>
+                </header>
+
+                <div id="dashboard-content" class="sub-view"></div>
+                <div id="transactions-content" class="sub-view hidden"></div>
+                <div id="manage-content" class="sub-view hidden"></div>
+            </main>
+
+            <!-- Bottom Nav (Mobile) -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-target="dashboard">
+                    <i data-lucide="layout-grid"></i>
+                </button>
+                <button class="nav-item" data-target="transactions">
+                    <i data-lucide="arrow-left-right"></i>
+                </button>
+                <button class="nav-item" data-target="manage">
+                    <i data-lucide="settings-2"></i>
+                </button>
+            </nav>
+
+            <button id="add-transaction-fab" class="fab mobile-only">
+                <i data-lucide="plus"></i>
+            </button>
+        </div>
+
+        <!-- Add Transaction Modal -->
+        <div id="transaction-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="justify-content: space-between; display: flex; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>New Transaction</h3>
+                    <button class="close-modal" style="background:none; border:none; cursor:pointer;"><i
+                            data-lucide="x"></i></button>
+                </div>
+                <form id="transaction-form">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Type</label>
+                            <select id="t-type" required>
+                                <option value="expense">Expense</option>
+                                <option value="income">Income</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Amount</label>
+                            <input type="number" id="t-amount" min="0.01" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="t-category" required></select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="t-date" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" id="t-desc" placeholder="What was this for?">
+                    </div>
+
+                    <div id="transaction-error" class="error-msg hidden"></div>
+
+                    <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                        <button type="button" class="btn btn-secondary close-modal" style="flex:1">Cancel</button>
+                        <button type="submit" class="btn btn-primary" style="flex:1">Save Transaction</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Confirmation Modal -->
+        <div id="confirm-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 380px; text-align: center; padding: 2rem;">
+                <div
+                    style="background: #fee2e2; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--danger-color);">
+                    <i data-lucide="alert-triangle" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Confirm Action</h3>
+                <p id="confirm-message" style="color: var(--text-secondary); margin-bottom: 2rem;">Are you sure you want
+                    to proceed?</p>
+                <div style="display: flex; gap: 1rem;">
+                    <button id="confirm-cancel" class="btn btn-secondary" style="flex:1">Cancel</button>
+                    <button id="confirm-yes" class="btn btn-primary"
+                        style="background: var(--danger-color); flex:1; border:none;">Delete</button>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Success Modal -->
+        <div id="success-modal" class="modal hidden">
+            <div class="modal-content" style="max-width: 380px; text-align: center; padding: 2rem;">
+                <div
+                    style="background: #d1fae5; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto; color: var(--success-color);">
+                    <i data-lucide="check" style="width: 32px; height: 32px;"></i>
+                </div>
+                <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Success!</h3>
+                <p style="color: var(--text-secondary);">Action completed successfully.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/api.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
